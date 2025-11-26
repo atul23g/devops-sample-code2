@@ -4,10 +4,12 @@ pipeline {
     stages {
         stage('Setup Python') {
             steps {
-                echo 'Installing Python and dependencies...'
+                echo 'Checking Python installation...'
                 sh '''
-                    apt-get update
-                    apt-get install -y python3 python3-pip python3-venv
+                    which python3 || echo "Python3 not found"
+                    python3 --version || echo "Python3 version check failed"
+                    which pip3 || echo "pip3 not found"
+                    pip3 --version || echo "pip3 version check failed"
                 '''
             }
         }
