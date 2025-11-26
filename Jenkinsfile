@@ -2,6 +2,15 @@ pipeline {
     agent any
 
     stages {
+        stage('Setup Python') {
+            steps {
+                echo 'Installing Python and dependencies...'
+                sh '''
+                    apt-get update
+                    apt-get install -y python3 python3-pip python3-venv
+                '''
+            }
+        }
         stage('Build') {
             steps {
                 echo 'Creating virtual environment and installing dependencies...'
