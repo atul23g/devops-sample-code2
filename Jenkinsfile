@@ -1,29 +1,33 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.9-slim'
+        }
+    }
 
     stages {
         stage('Setup Python') {
             steps {
-                echo 'Checking Python installation...'
+                echo 'Checking Python installation in Docker container...'
                 sh '''
-                    which python3 || echo "Python3 not found"
-                    python3 --version || echo "Python3 version check failed"
-                    which pip3 || echo "pip3 not found"
-                    pip3 --version || echo "pip3 version check failed"
+                    which python
+                    python --version
+                    which pip
+                    pip --version
                 '''
             }
         }
         stage('Build') {
             steps {
                 echo 'Creating virtual environment and installing dependencies...'
-                sh 'python3 -m venv venv'
+                sh 'python -m venv venv'
                 sh 'source venv/bin/activate && pip install -r requirements.txt'
             }
         }
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                sh 'source venv/bin/activate && python3 -m unittest discover -s .'
+                sh 'source venv/bin/activate && python -m unittest discover -s .'
             }
         }
         stage('Deploy') {
@@ -41,10 +45,10 @@ pipeline {
                 echo 'Running application...'
                 sh '''
                 cd ${WORKSPACE}/python-app-deploy
-                python3 -m venv venv
+                python -m venv venv
                 source venv/bin/activate
                 pip install -r requirements.txt
-                nohup python3 app.py > app.log 2>&1 & 
+                nohup python app.py > app.log 2>&1 & 
                 echo $! > app.pid
                 '''
             }
@@ -55,7 +59,7 @@ pipeline {
                 sh '''
                 cd ${WORKSPACE}/python-app-deploy
                 source venv/bin/activate
-                python3 ../test_app.py
+                python ../test_app.py
                 '''
             }
         }
