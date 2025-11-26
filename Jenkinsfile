@@ -1,33 +1,16 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.9-slim'
-        }
-    }
+    agent any
 
     stages {
-        stage('Setup Python') {
-            steps {
-                echo 'Checking Python installation in Docker container...'
-                sh '''
-                    which python
-                    python --version
-                    which pip
-                    pip --version
-                '''
-            }
-        }
         stage('Build') {
             steps {
                 echo 'Creating virtual environment and installing dependencies...'
-                sh 'python -m venv venv'
-                sh 'source venv/bin/activate && pip install -r requirements.txt'
             }
         }
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                sh 'source venv/bin/activate && python -m unittest discover -s .'
+                sh 'python3 -m unittest discover -s .'
             }
         }
         stage('Deploy') {
@@ -36,7 +19,6 @@ pipeline {
                 sh '''
                 mkdir -p ${WORKSPACE}/python-app-deploy
                 cp ${WORKSPACE}/app.py ${WORKSPACE}/python-app-deploy/
-                cp ${WORKSPACE}/requirements.txt ${WORKSPACE}/python-app-deploy/
                 '''
             }
         }
@@ -44,22 +26,16 @@ pipeline {
             steps {
                 echo 'Running application...'
                 sh '''
-                cd ${WORKSPACE}/python-app-deploy
-                python -m venv venv
-                source venv/bin/activate
-                pip install -r requirements.txt
-                nohup python app.py > app.log 2>&1 & 
-                echo $! > app.pid
+                nohup python3 ${WORKSPACE}/python-app-deploy/app.py > ${WORKSPACE}/python-app-deploy/app.log 2>&1 & 
+                echo $! > ${WORKSPACE}/python-app-deploy/app.pid
                 '''
             }
         }
         stage('Test Application') {
             steps {
-                echo 'Testing deployed application...'
+                echo 'Testing application...'
                 sh '''
-                cd ${WORKSPACE}/python-app-deploy
-                source venv/bin/activate
-                python ../test_app.py
+                python3 ${WORKSPACE}/test_app.py
                 '''
             }
         }
