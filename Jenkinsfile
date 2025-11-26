@@ -5,14 +5,12 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Creating virtual environment and installing dependencies...'
-                sh 'python3 -m venv venv'
-                sh '. venv/bin/activate && pip install -r requirements.txt'
             }
         }
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                sh '. venv/bin/activate && python3 -m unittest discover -s .'
+                sh 'python3 -m unittest discover -s .'
             }
         }
         stage('Deploy') {
@@ -21,7 +19,6 @@ pipeline {
                 sh '''
                 mkdir -p ${WORKSPACE}/python-app-deploy
                 cp ${WORKSPACE}/app.py ${WORKSPACE}/python-app-deploy/
-                cp ${WORKSPACE}/requirements.txt ${WORKSPACE}/python-app-deploy/
                 '''
             }
         }
@@ -29,12 +26,8 @@ pipeline {
             steps {
                 echo 'Running application...'
                 sh '''
-                cd ${WORKSPACE}/python-app-deploy
-                python3 -m venv venv
-                . venv/bin/activate
-                pip install -r requirements.txt
-                nohup python3 app.py > app.log 2>&1 & 
-                echo $! > app.pid
+                nohup python3 ${WORKSPACE}/python-app-deploy/app.py > ${WORKSPACE}/python-app-deploy/app.log 2>&1 & 
+                echo $! > ${WORKSPACE}/python-app-deploy/app.pid
                 '''
             }
         }
@@ -42,9 +35,7 @@ pipeline {
             steps {
                 echo 'Testing application...'
                 sh '''
-                cd ${WORKSPACE}/python-app-deploy
-                . venv/bin/activate
-                python3 ../test_app.py
+                python3 ${WORKSPACE}/test_app.py
                 '''
             }
         }
